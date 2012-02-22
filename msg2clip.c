@@ -20,6 +20,10 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#include <windows.h>
+#include <shlobj.h>
+#include <tchar.h>
+
 #include "sylmain.h"
 #include "plugin.h"
 #include "folder.h"
@@ -31,6 +35,8 @@
 #include "messageview.h"
 #include "procheader.h"
 #include "msg2clip.h"
+
+#include "page_save.xpm"
 
 static SylPluginInfo info = {
   N_(PLUGIN_NAME),
@@ -45,8 +51,20 @@ static void init_done_cb(GObject *obj, gpointer data);
 static void app_exit_cb(GObject *obj, gpointer data);
 
 static void exec_msg2clip_menu_cb(void);
+static void copy_btn_clicked(GtkButton *button, gpointer data);
 
 gulong app_exit_handler_id = 0;
+
+static gchar* g_copyright = N_("Msg2Clip is distributed under GPL license.\n"
+			       "\n"
+			       "Copyright (C) 2012 HAYASHI Kentaro <kenhys@gmail.com>"
+			       "\n"
+			       "msg2clip contains following resource.\n"
+			       "\n"
+			       "page_save.xpm: converted from page_save.png.\n"
+			       "Silk icon set 1.3 By Mark James\n"
+			       "http://www.famfamfam.com/lab/icons/silk/\n"
+			       "Creative Commons Attribution 2.5 License.\n");
 
 void plugin_load(void)
 {
@@ -74,25 +92,6 @@ void plugin_load(void)
   
   g_print("msg2clip plug-in loading done\n");
 
-  GList* folder_list = folder_get_list();
-  Folder *cur_folder;
-  GList *cur;
-  gint i;
-  
-  for (i = 0, cur = folder_list; cur != NULL; cur = cur->next, i++) {
-    cur_folder = FOLDER(cur->data);
-    debug_print("[PLUGIN] folder[%d] name %s\n",i, cur_folder->name);
-    if (FOLDER_TYPE(cur_folder) == F_MH) {
-      if (cur_folder->data!=NULL){
-        debug_print("[PLUGIN] folder[%d] data %s\n",i, cur_folder->data);
-      }
-      if (LOCAL_FOLDER(cur_folder)->rootpath!=NULL){
-        debug_print("[PLUGIN] folder[%d] rootpath %s\n",i, LOCAL_FOLDER(cur_folder)->rootpath);
-        g_opt.folder_path = g_strdup(LOCAL_FOLDER(cur_folder)->rootpath);
-        break;
-      }
-    }
-  }    
 }
 
 void plugin_unload(void)
@@ -140,36 +139,6 @@ static void prefs_ok_cb(GtkWidget *widget, gpointer data)
   
   GList* folder_list = folder_get_list();
   
-  Folder *cur_folder;
-  GList *cur;
-  gint i;
-  Folder *mh_folder;
-  
-  gint mhn = 0;
-  for (i = 0, cur = folder_list; cur != NULL; cur = cur->next, i++) {
-    cur_folder = FOLDER(cur->data);
-    debug_print("[PLUGIN] folder[%d] name %s\n",i, cur_folder->name);
-    if (FOLDER_TYPE(cur_folder) == F_MH) {
-      if (cur_folder->data!=NULL){
-        debug_print("[PLUGIN] folder[%d] data %s\n",i, cur_folder->data);
-      }
-      if (LOCAL_FOLDER(cur_folder)->rootpath!=NULL){
-        debug_print("[PLUGIN] folder[%d] rootpath %s\n",i, LOCAL_FOLDER(cur_folder)->rootpath);
-        if (mhn == 0) {
-          mh_folder = cur_folder;
-        }
-        mhn++;
-      }
-    }
-  }
-  if (mhn != 1){
-    syl_plugin_alertpanel_message(_("Msg2Clip"), _("does not support multiple MH folder"), ALERT_ERROR);
-  } else {
-    if (mh_folder != NULL){
-      LOCAL_FOLDER(mh_folder)->rootpath = g_strdup(gtk_entry_get_text(GTK_ENTRY(g_opt.folder_entry)));
-    }
-    folder_write_list();
-  }
   gtk_widget_destroy(GTK_WIDGET(data));
 }
 
@@ -200,31 +169,20 @@ static void exec_msg2clip_menu_cb(void)
   gtk_container_add(GTK_CONTAINER(window), vbox);
 
 
-  /* select folder and read random n mails test */
-  GtkWidget *folder_frm = gtk_frame_new(_("Mailbox directory"));
-  GtkWidget *folder_align = gtk_alignment_new(0, 0, 1, 1);
-  gtk_alignment_set_padding(GTK_ALIGNMENT(folder_align), 6, 6, 6, 6);
+  /* notebook */ 
+  GtkWidget *notebook = gtk_notebook_new();
+  /* main tab */
+  create_config_main_page(notebook, g_opt.rcfile);
+  /* about, copyright tab */
+  create_config_about_page(notebook, g_opt.rcfile);
 
-  GtkWidget *folder_btn = gtk_button_new_from_stock(GTK_STOCK_OPEN);
-  g_opt.folder_entry = gtk_entry_new();
-  GtkWidget *hbox = gtk_hbox_new(FALSE, 6);
-  gtk_box_pack_start(GTK_BOX(hbox), g_opt.folder_entry, TRUE, TRUE, 6);
-  gtk_box_pack_start(GTK_BOX(hbox), folder_btn, FALSE, FALSE, 6);
-  gtk_container_add(GTK_CONTAINER(folder_align), hbox);
-  gtk_container_add(GTK_CONTAINER(folder_frm), folder_align);
-
-  gtk_box_pack_start(GTK_BOX(vbox), folder_frm, FALSE, FALSE, 6);
-
-  gtk_entry_set_text(GTK_ENTRY(g_opt.folder_entry), g_opt.folder_path);
-
-  g_signal_connect(G_OBJECT(folder_btn), "clicked",
-                   G_CALLBACK(folder_btn_clicked), g_opt.folder_entry);
+  gtk_widget_show(notebook);
+  gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
 
 
   confirm_area = gtk_hbutton_box_new();
   gtk_button_box_set_layout(GTK_BUTTON_BOX(confirm_area), GTK_BUTTONBOX_END);
   gtk_box_set_spacing(GTK_BOX(confirm_area), 6);
-
 
   ok_btn = gtk_button_new_from_stock(GTK_STOCK_OK);
   GTK_WIDGET_SET_FLAGS(ok_btn, GTK_CAN_DEFAULT);
@@ -242,7 +200,7 @@ static void exec_msg2clip_menu_cb(void)
   gtk_widget_grab_default(ok_btn);
   gtk_widget_show(vbox);
 
-  gtk_window_set_title(GTK_WINDOW(window), _("Mailbox is Here!"));
+  gtk_window_set_title(GTK_WINDOW(window), _("Msg2Clip Settings"));
 
   g_signal_connect(G_OBJECT(ok_btn), "clicked",
                    G_CALLBACK(prefs_ok_cb), window);
@@ -252,25 +210,79 @@ static void exec_msg2clip_menu_cb(void)
 
 }
 
-typedef struct _Mailer {
-    gchar *head;
-    gchar *image;
-} Mailer;
+static GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey)
+{
+  debug_print("create_config_main_page\n");
+  if (notebook == NULL){
+    return NULL;
+  }
+  /* startup */
+  if (pkey!=NULL){
+  }
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 0);
 
-static Mailer x_mailer[] = {
-    {"Microsoft Office Outlook", "ms_outlook12.png"},
-    {"Microsoft Outlook Express", "ms_outlook_express.png"},
-    {"Microsoft Outlook", "ms_outlook.png"},
-    {"Mew", "mew.png"},
-    {"Thunderbird", "thunderbird.png"},
-    {"Wanderlust", "wanderlust.png"},
-    {"Becky!", "becky.png"},
-    {"Sylpheed", "sylpheed.png"},
-    {"Claws Mail", "claws-mail.png"},
-    {"Mutt", "mutt.png"},
-    {"Shuriken", "shuriken_pro.png"},
-    {"Eudora", "eudora.png"},
-};
+  /**/
+  GtkWidget *startup_align = gtk_alignment_new(0, 0, 1, 1);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(startup_align), ALIGN_TOP, ALIGN_BOTTOM, ALIGN_LEFT, ALIGN_RIGHT);
+
+  GtkWidget *startup_frm = gtk_frame_new(_("Startup Option"));
+  GtkWidget *startup_frm_align = gtk_alignment_new(0, 0, 1, 1);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(startup_frm_align), ALIGN_TOP, ALIGN_BOTTOM, ALIGN_LEFT, ALIGN_RIGHT);
+
+
+  g_opt.startup = gtk_check_button_new_with_label(_("Enable plugin on startup."));
+  gtk_container_add(GTK_CONTAINER(startup_frm_align), g_opt.startup);
+  gtk_container_add(GTK_CONTAINER(startup_frm), startup_frm_align);
+  gtk_container_add(GTK_CONTAINER(startup_align), startup_frm);
+
+  gtk_widget_show(g_opt.startup);
+
+  /**/
+  gtk_box_pack_start(GTK_BOX(vbox), startup_align, FALSE, FALSE, 0);
+
+  GtkWidget *general_lbl = gtk_label_new(_("General"));
+  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, general_lbl);
+  gtk_widget_show_all(notebook);
+  return NULL;
+
+}
+
+/* about, copyright tab */
+static GtkWidget *create_config_about_page(GtkWidget *notebook, GKeyFile *pkey)
+{
+  debug_print("create_config_about_page\n");
+  if (notebook == NULL){
+    return NULL;
+  }
+  GtkWidget *hbox = gtk_hbox_new(TRUE, 6);
+  GtkWidget *vbox = gtk_vbox_new(FALSE, 6);
+
+  GtkWidget *lbl = gtk_label_new(_("Msg2Clip"));
+  GtkWidget *desc = gtk_label_new(PLUGIN_DESC);
+
+  /* copyright */
+  GtkWidget *scrolled = gtk_scrolled_window_new(NULL, NULL);
+
+  gtk_box_pack_start(GTK_BOX(vbox), lbl, FALSE, TRUE, 6);
+  gtk_box_pack_start(GTK_BOX(vbox), desc, FALSE, TRUE, 6);
+  gtk_box_pack_start(GTK_BOX(vbox), scrolled, TRUE, TRUE, 6);
+  gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 6);
+
+  GtkTextBuffer *tbuffer = gtk_text_buffer_new(NULL);
+  gtk_text_buffer_set_text(tbuffer, _(g_copyright), strlen(g_copyright));
+  GtkWidget *tview = gtk_text_view_new_with_buffer(tbuffer);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(tview), FALSE);
+  gtk_container_add(GTK_CONTAINER(scrolled), tview);
+    
+  gtk_box_pack_start(GTK_BOX(vbox), scrolled, TRUE, TRUE, 6);
+    
+  /**/
+  GtkWidget *general_lbl = gtk_label_new(_("About"));
+  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), hbox, general_lbl);
+  gtk_widget_show_all(notebook);
+  return NULL;
+}
+
 
 static void messageview_show_cb(GObject *obj, gpointer msgview,
 				MsgInfo *msginfo, gboolean all_headers)
@@ -306,8 +318,6 @@ static void messageview_show_cb(GObject *obj, gpointer msgview,
 
   GList* wl = gtk_container_get_children(GTK_CONTAINER(hbox));
 
-  gpointer gicon = NULL;
-  guint iconn = 0;
   gint i=g_list_length(wl)-1;
   gboolean bfound = FALSE;
 
@@ -320,77 +330,95 @@ static void messageview_show_cb(GObject *obj, gpointer msgview,
 #if DEBUG
       g_print("[DEBUG] remove button: %p\n", gicon);
 #endif
-      /* gtk_container_remove(GTK_CONTAINER(hbox), GTK_IMAGE(gdata));*/
-      bfound = TRUE;
+      gtk_container_remove(GTK_CONTAINER(hbox), GTK_BUTTON(gdata));
     }
     i--;
   }
 
-  /* check X-Mailer or User-Agent */
   gchar *msg_path = procmsg_get_message_file_path(msginfo);
                     
-#if DEBUG
-  g_print("[DEBUG] msg_path:%s\n", msg_path);
-#endif
-  GList* hl = procheader_get_header_list_from_file(msg_path);
-  gchar *path = NULL;
 
-  gboolean gface = FALSE;
-  for (i=0; i<g_list_length(hl); i++){
-    Header *header = g_list_nth_data(hl, i);
-    if (header && header->name && header->body) {
-      if (strcmp(header->name, "X-Face") == 0) {
-	/* skip to display MUA icon */
-	gface = TRUE;
-	break;
-      } else if (strcmp(header->name, "X-Mailer") == 0 ||
-		 strcmp(header->name, "User-Agent") == 0) {
-#if DEBUG
-	g_print("[DEBUG] name:%s body:%s\n", header->name, header->body);
-#endif
-	guint mindex = 0;
-	guint mmax = sizeof(x_mailer)/sizeof(Mailer);
-	for (mindex = 0; mindex < mmax; mindex++){
-	  if (header->body && x_mailer[mindex].head &&
-	      g_strrstr(header->body, x_mailer[mindex].head) != NULL) {
-	    path = g_strconcat(get_rc_dir(),
-			       G_DIR_SEPARATOR_S,
-			       "plugins",
-			       G_DIR_SEPARATOR_S,
-			       MSG2CLIP,
-			       G_DIR_SEPARATOR_S,
-			       x_mailer[mindex].image, NULL);
-	    break;
-	  }
-	}
-      }
-    }
-  }
+  debug_print("[DEBUG] msg_path:%s\n", msg_path);
 
-  GError *gerr = NULL;
 
   if (bfound != TRUE){
     GtkWidget *copy_btn = gtk_button_new_from_stock(GTK_STOCK_FILE);
     gtk_box_pack_end(GTK_BOX(hbox), copy_btn, FALSE, FALSE, 0);
-    gtk_widget_show(copy_btn);
-#if DEBUG
-    g_print("[DEBUG] copy mail to clipboard icon: %p\n", copy_btn);
-#endif
+
+    GdkPixbuf* pbuf = gdk_pixbuf_new_from_xpm_data((const char**)page_save);
+    GtkWidget* image = gtk_image_new_from_pixbuf(pbuf);
+    
+    gtk_button_set_image(GTK_BUTTON(copy_btn), image);
+    gtk_button_set_label(GTK_BUTTON(copy_btn), "");
+
+    g_signal_connect(G_OBJECT(copy_btn), "clicked",
+		     G_CALLBACK(copy_btn_clicked), msginfo);
+    
+    gtk_widget_show(image);
+    gtk_widget_show_all(copy_btn);
+
+    debug_print("[DEBUG] copy mail to clipboard icon: %p\n", copy_btn);
+
   }
 
 }
 
-static void folder_btn_clicked(GtkButton *button, gpointer data)
+static void copy_btn_clicked(GtkButton *button, gpointer data)
 {
-  GtkWidget *dialog = gtk_file_chooser_dialog_new(NULL, NULL, GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                                  GTK_STOCK_OPEN,GTK_RESPONSE_ACCEPT,
-                                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                  NULL);
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT){
-    gchar *filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(dialog));
+  
+  if (data != NULL) {
+    MsgInfo* msginfo = (MsgInfo*)data;
+    gchar *msg_path = procmsg_get_message_file_path(msginfo);
+    
+    debug_print("[DEBUG] msg_path:%s\n", msg_path);
 
-    GtkWidget *widget = data;
-    gtk_entry_set_text(GTK_ENTRY(widget), filename);
-    g_free (filename);
-  }
+    LPDROPFILES lpDropFile;
+
+    int mblen = MultiByteToWideChar(CP_UTF8, 0, msg_path, -1, NULL,0);
+    WCHAR* pszUnicode = malloc( sizeof(WCHAR)*(mblen+1));
+    memset(pszUnicode, sizeof(WCHAR), (mblen+1));
+
+    MultiByteToWideChar(CP_UTF8, 0, msg_path, strlen(msg_path)+1, pszUnicode, mblen);
+  
+
+    HDROP hDrop = (HDROP)GlobalAlloc(GHND,sizeof(DROPFILES)+2*mblen+2);
+    if (hDrop==NULL) {
+      debug_print ("[DEBUG] failed to allocate Global memory.\n");
+      return;
+    }
+  
+    debug_print ("[DEBUG] lpDropFile[0] :%p\n", &lpDropFile[0]);
+    debug_print ("[DEBUG] lpDropFile[1] :%p\n", &lpDropFile[1]);
+    debug_print ("[DEBUG] sizeof DROPFILES :%d\n", sizeof(DROPFILES));
+    debug_print ("[DEBUG] wcslen :%d\n", wcslen(pszUnicode));
+
+
+    lpDropFile = (LPDROPFILES)GlobalLock(hDrop);
+    lpDropFile->pFiles = sizeof(DROPFILES);
+    lpDropFile->pt.x = 0;
+    lpDropFile->pt.y = 0;
+    lpDropFile->fNC = FALSE;
+    lpDropFile->fWide = TRUE;
+
+    char *buf;
+    buf = (char *)(&lpDropFile[1]);
+    wcscpy((WCHAR*)buf,pszUnicode);
+    buf += 2*wcslen(pszUnicode) + 1;
+    *buf++ = 0;
+    *buf = 0;
+
+    GlobalUnlock(hDrop);
+ 
+    if (OpenClipboard(0) == 0) {
+      debug_print ("[DEBUG] failed to open clipboard.\n");
+      GlobalFree(hDrop);
+      return;
+    }
+    EmptyClipboard();
+    SetClipboardData(CF_HDROP, hDrop);
+    CloseClipboard();
+
+  } 
 }
+
+

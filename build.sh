@@ -127,7 +127,7 @@ else
                 compile
                 ;;
             test)
-		com="gcc -c $INC cp2clip.c"
+		com="gcc -c $INC $DEF cp2clip.c"
 		echo $com
 		eval $com
 		if [ $? != 0 ]; then

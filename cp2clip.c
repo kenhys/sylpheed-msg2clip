@@ -28,7 +28,7 @@ void callback( GtkWidget *widget,
   WCHAR* pszUnicode = malloc(sizeof(WCHAR)*( mblen+1));
   memset(pszUnicode, sizeof(WCHAR), (mblen+1));
 
-  MultiByteToWideChar(CP_UTF8, 0, filename, lstrlen(filename)+1, pszUnicode, mblen);
+  MultiByteToWideChar(CP_UTF8, 0, filename, strlen(filename)+1, pszUnicode, mblen);
   
 
   HDROP hDrop = (HDROP)GlobalAlloc(GHND,sizeof(DROPFILES)+2*mblen+2);
@@ -45,7 +45,7 @@ void callback( GtkWidget *widget,
 
   char *buf;
   buf = (char *)(&lpDropFile[1]);
-  wcscpy(buf,pszUnicode);
+  wcscpy((WCHAR*)buf,pszUnicode);
   buf += 2*wcslen(pszUnicode) + 1;
   *buf++ = 0;
   *buf = 0;

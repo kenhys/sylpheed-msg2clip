@@ -41,12 +41,19 @@ struct _Msg2ClipOption {
   /* rcfile */
   GKeyFile *rcfile;
   
-  GtkWidget *folder_entry;
-  gchar *folder_path;
+  GtkWidget *startup;
+
 };
     
-static void folder_btn_clicked(GtkButton *button, gpointer data);
+#define ALIGN_TOP 3
+#define ALIGN_BOTTOM 3
+#define ALIGN_LEFT 6
+#define ALIGN_RIGHT 6
+#define BOX_SPACE 6
+
 static void messageview_show_cb(GObject *obj, gpointer msgview,
                                 MsgInfo *msginfo, gboolean all_headers);
+static GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey);
+static GtkWidget *create_config_about_page(GtkWidget *notebook, GKeyFile *pkey);
 
 #endif /* __MSG2CLIP_H__ */
