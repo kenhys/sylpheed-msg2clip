@@ -1,0 +1,27 @@
+#: msg2clip.h:29
+msgid "Msg2Clip Plug-in"
+msgstr ""
+
+#: msg2clip.h:30
+msgid "Copy message to clipboard"
+msgstr ""
+
+#: msg2clip.c:60
+msgid "Msg2Clip [msg2clip]"
+msgstr ""
+
+#: msg2clip.c:166
+msgid "SylIcons"
+msgstr ""
+
+#: msg2clip.c:166
+msgid "does not support multiple MH folder"
+msgstr ""
+
+#: msg2clip.c:204
+msgid "Mailbox directory"
+msgstr ""
+
+#: msg2clip.c:245
+msgid "Mailbox is Here!"
+msgstr ""
