@@ -4,24 +4,45 @@ msgstr ""
 
 #: msg2clip.h:30
 msgid "Copy message to clipboard"
+msgstr "メール(ファイル)をクリップボードにコピーする"
+
+#: msg2clip.c:58
+msgid ""
+"Msg2Clip is distributed under GPL license.\n"
+"\n"
+"Copyright (C) 2012 HAYASHI Kentaro <kenhys@gmail.com>\n"
+"msg2clip contains following resource.\n"
+"\n"
+"page_save.xpm: converted from page_save.png.\n"
+"Silk icon set 1.3 By Mark James\n"
+"http://www.famfamfam.com/lab/icons/silk/\n"
+"Creative Commons Attribution 2.5 License.\n"
 msgstr ""
 
-#: msg2clip.c:60
+#: msg2clip.c:78
 msgid "Msg2Clip [msg2clip]"
 msgstr ""
 
-#: msg2clip.c:166
-msgid "SylIcons"
+#: msg2clip.c:203
+msgid "Msg2Clip Settings"
+msgstr "Msg2Clip 設定"
+
+#: msg2clip.c:228
+msgid "Startup Option"
 msgstr ""
 
-#: msg2clip.c:166
-msgid "does not support multiple MH folder"
+#: msg2clip.c:233
+msgid "Enable plugin on startup."
+msgstr "起動時にプラグインを有効化する"
+
+#: msg2clip.c:243
+msgid "General"
+msgstr "オプション"
+
+#: msg2clip.c:260
+msgid "Msg2Clip"
 msgstr ""
 
-#: msg2clip.c:204
-msgid "Mailbox directory"
-msgstr ""
-
-#: msg2clip.c:245
-msgid "Mailbox is Here!"
+#: msg2clip.c:280
+msgid "About"
 msgstr ""
