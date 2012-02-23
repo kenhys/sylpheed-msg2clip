@@ -105,14 +105,14 @@ else
                     r=$1
                     shift
                     zip sylpheed-$NAME-$r.zip $NAME.dll
-                    zip -r sylpheed-$NAME-$r.zip README
+                    #zip -r sylpheed-$NAME-$r.zip README
                     zip -r sylpheed-$NAME-$r.zip README.*.txt
                     zip -r sylpheed-$NAME-$r.zip $NAME.c
                     zip -r sylpheed-$NAME-$r.zip $NAME.h
                     zip -r sylpheed-$NAME-$r.zip version.rc
                     zip -r sylpheed-$NAME-$r.zip ChangeLog
                     zip -r sylpheed-$NAME-$r.zip po/$NAME.mo
-                    #zip -r sylpheed-$NAME-$r.zip *.xpm
+                    zip -r sylpheed-$NAME-$r.zip *.xpm
                     sha1sum sylpheed-$NAME-$r.zip > sylpheed-$NAME-$r.zip.sha1sum
                 fi
                 ;;
