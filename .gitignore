@@ -1,0 +1,6 @@
+lib/*.a
+lib/*.def
+private_build.h
+*.dll
+*.o
+.compile
