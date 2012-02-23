@@ -106,6 +106,7 @@ else
                     shift
                     zip sylpheed-$NAME-$r.zip $NAME.dll
                     #zip -r sylpheed-$NAME-$r.zip README
+                    zip -r sylpheed-$NAME-$r.zip COPYING
                     zip -r sylpheed-$NAME-$r.zip README.*.txt
                     zip -r sylpheed-$NAME-$r.zip $NAME.c
                     zip -r sylpheed-$NAME-$r.zip $NAME.h
