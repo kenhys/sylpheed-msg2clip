@@ -351,6 +351,9 @@ static void messageview_show_cb(GObject *obj, gpointer msgview,
     gtk_button_set_image(GTK_BUTTON(copy_btn), image);
     gtk_button_set_label(GTK_BUTTON(copy_btn), "");
 
+    GtkTooltips *tip = gtk_tooltips_new();
+    gtk_tooltips_set_tip(tip, copy_btn, _("Copy this mail to clipboard."), NULL);
+
     g_signal_connect(G_OBJECT(copy_btn), "clicked",
 		     G_CALLBACK(copy_btn_clicked), msginfo);
     

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-23 04:04+0900\n"
+"POT-Creation-Date: 2012-02-23 17:59+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,4 +63,8 @@ msgstr ""
 
 #: msg2clip.c:280
 msgid "About"
+msgstr ""
+
+#: msg2clip.c:355
+msgid "Copy this mail to clipboard."
 msgstr ""

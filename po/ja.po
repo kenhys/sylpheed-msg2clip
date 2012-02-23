@@ -1,10 +1,28 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-02-23 17:59+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: HAYASHI Kentaro <kenhys@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
 #: msg2clip.h:29
 msgid "Msg2Clip Plug-in"
-msgstr ""
+msgstr "Msg2Clip プラグイン"
 
 #: msg2clip.h:30
 msgid "Copy message to clipboard"
-msgstr "メール(ファイル)をクリップボードにコピーする"
+msgstr ""
 
 #: msg2clip.c:58
 msgid ""
@@ -29,15 +47,15 @@ msgstr "Msg2Clip 設定"
 
 #: msg2clip.c:228
 msgid "Startup Option"
-msgstr ""
+msgstr "起動オプション"
 
 #: msg2clip.c:233
 msgid "Enable plugin on startup."
-msgstr "起動時にプラグインを有効化する"
+msgstr "起動時にプラグインを有効化"
 
 #: msg2clip.c:243
 msgid "General"
-msgstr "オプション"
+msgstr "設定"
 
 #: msg2clip.c:260
 msgid "Msg2Clip"
@@ -46,3 +64,7 @@ msgstr ""
 #: msg2clip.c:280
 msgid "About"
 msgstr ""
+
+#: msg2clip.c:355
+msgid "Copy this mail to clipboard."
+msgstr "このメールをクリップボードにコピー"
