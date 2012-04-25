@@ -53,7 +53,5 @@ struct _Msg2ClipOption {
 
 static void messageview_show_cb(GObject *obj, gpointer msgview,
                                 MsgInfo *msginfo, gboolean all_headers);
-static GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey);
-static GtkWidget *create_config_about_page(GtkWidget *notebook, GKeyFile *pkey);
 
 #endif /* __MSG2CLIP_H__ */
