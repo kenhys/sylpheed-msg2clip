@@ -1,9 +1,8 @@
 
 NAME=msg2clip
-TARGET=$NAME.dll
-OBJS="$NAME.o"
-SRCS="$NAME.c ui.c "
-OBJS="$NAME.o ui.o version.o"
+TARGET=src/$NAME.dll
+SRCS="src/$NAME.c src/ui.c "
+OBJS="src/$NAME.o src/ui.o src/version.o"
 PKG=sylpheed-$NAME
 LIBSYLPH=./lib/libsylph-0-1.a
 LIBSYLPHEED=./lib/libsylpheed-plugin-0-1.a
@@ -11,6 +10,9 @@ LIBSYLFILTER=./lib/libsylfilter.a
 #LIBS=" -lglib-2.0-0  -lintl"
 LIBS=" `pkg-config --libs glib-2.0 gobject-2.0 gtk+-2.0 gthread-2.0`"
 INC=" -I. -I../../ -I../../libsylph -I../../src -I/mingw/local `pkg-config --cflags glib-2.0 cairo gdk-2.0 gtk+-2.0 gthread-2.0`"
+
+DCOMPILE=src/.compile
+PBUILDH=src/private_build.h
 
 DEF=" -DHAVE_CONFIG_H -DUNICODE -D_UNICODE -DRELEASE_3_1"
 DEBUG=0
@@ -21,24 +23,25 @@ SUBMINOR=0
 
 function compile ()
 {
-    if [ ! -f "private_build.h" ]; then
-        echo "1" > .compile
-        echo "#define PRIVATE_BUILD 1" > private_build.h
+    if [ ! -f "$PBUILDH" ]; then
+        echo "1" > $DCOMPILE
+        echo "#define PRIVATE_BUILD 1" > $PBUILDH
     else
-        ret=`cat .compile | gawk '{print $i+1}'`
-        echo $ret | tee .compile
-        echo "#define PRIVATE_BUILD \"build $ret\\0\"" > private_build.h
-        echo "#define NAME \"Msg2Clip\\0\"" >> private_build.h
-        echo "#define VERSION \"$MAJOR, $MINOR, $SUBMINOR, 0\\0\"" >> private_build.h
-        echo "#define NAMEVERSION \"Msg2Clip $MAJOR.$MINOR.$SUBMINOR\\0\"" >> private_build.h
-        echo "#define QVERSION \"$MAJOR,$MINOR,$SUBMINOR,0\"" >> private_build.h
+        ret=`cat $DCOMPILE | gawk '{print $i+1}'`
+        echo $ret | tee $DCOMPILE
+        echo "#define PRIVATE_BUILD \"build $ret\\0\"" > $PBUILDH
+        echo "#define NAME \"Msg2Clip\\0\"" >> $PBUILDH
+        echo "#define VERSION \"$MAJOR, $MINOR, $SUBMINOR, 0\\0\"" >> $PBUILDH
+        echo "#define NAMEVERSION \"Msg2Clip $MAJOR.$MINOR.$SUBMINOR\\0\"" >> $PBUILDH
+        echo "#define QVERSION \"$MAJOR,$MINOR,$SUBMINOR,0\"" >> $PBUILDH
     fi
-    com="windres -i version.rc -o version.o"
+    com="windres -i res/version.rc -o src/version.o"
     echo $com
     eval $com
 
     for f in $SRCS; do
-	com="gcc -Wall -c $DEF $INC $f"
+	BASENAME=`basename $f .c`
+	com="gcc -Wall -c -o src/$BASENAME.o $DEF $INC $f"
 	echo $com
 	eval $com
 	if [ $? != 0 ]; then
