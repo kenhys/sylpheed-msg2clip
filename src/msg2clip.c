@@ -36,7 +36,7 @@
 #include "procheader.h"
 #include "msg2clip.h"
 
-#include "page_save.xpm"
+#include "../res/page_save.xpm"
 
 static SylPluginInfo info = {
   N_(PLUGIN_NAME),
