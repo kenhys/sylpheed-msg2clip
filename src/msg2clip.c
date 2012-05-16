@@ -20,9 +20,11 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#if defined(G_OS_WIN32)
 #include <windows.h>
 #include <shlobj.h>
 #include <tchar.h>
+#endif
 
 #include "sylmain.h"
 #include "plugin.h"
@@ -296,6 +298,7 @@ static void copy_btn_clicked(GtkButton *button, gpointer data)
     
     debug_print("[DEBUG] msg_path:%s\n", msg_path);
 
+#if defined(G_OS_WIN32)
     LPDROPFILES lpDropFile;
 
     int mblen = MultiByteToWideChar(CP_UTF8, 0, msg_path, -1, NULL,0);
@@ -341,7 +344,7 @@ static void copy_btn_clicked(GtkButton *button, gpointer data)
     EmptyClipboard();
     SetClipboardData(CF_HDROP, hDrop);
     CloseClipboard();
-
+#endif
   } 
 }
 
