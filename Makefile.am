@@ -3,7 +3,7 @@ libdir = $(plugindir)
 lib_LTLIBRARIES = msg2clip.la
 
 msg2clip_la_SOURCES = src/msg2clip.c src/ui.c
-msg2cli_la_LDFLAGS = -module -no-undefined -avoid-version
+msg2clip_la_LDFLAGS = -module -no-undefined -avoid-version
 
 INCLUDES = \
 	$(GTK_CFLAGS) \
