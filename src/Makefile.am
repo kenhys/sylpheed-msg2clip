@@ -1,7 +1,7 @@
 
 lib_LTLIBRARIES = msg2clip.la
 
-msg2clip_la_SOURCES = msg2clip.c ui.c
+msg2clip_la_SOURCES = msg2clip.c
 msg2clip_la_LDFLAGS = -module -no-undefined -avoid-version
 
 INCLUDES = \
