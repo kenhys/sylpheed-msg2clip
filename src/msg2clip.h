@@ -22,9 +22,6 @@
 
 #define MSG2CLIP "msg2clip"
 #define MSG2CLIPRC "msg2cliprc"
-#define _(String)   dgettext(MSG2CLIP, String)
-#define N_(String)  gettext_noop(String)
-#define gettext_noop(String) (String)
 
 #define PLUGIN_NAME N_("Msg2Clip Plug-in")
 #define PLUGIN_DESC N_("Copy message to clipboard")
