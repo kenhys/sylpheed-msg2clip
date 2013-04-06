@@ -129,12 +129,6 @@ static void app_exit_cb(GObject *obj, gpointer data)
   g_print("test: %p: app will exit\n", obj);
 }
 
-static void activate_menu_cb(GtkMenuItem *menuitem, gpointer data)
-{
-  g_print("menu activated\n");
-}
-
-
 static void prefs_ok_cb(GtkWidget *widget, gpointer data)
 {
   
@@ -155,7 +149,8 @@ static void exec_msg2clip_menu_cb(void)
   GtkWidget *confirm_area;
   GtkWidget *ok_btn;
   GtkWidget *cancel_btn;
-
+  GtkWidget *notebook;
+  
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 8);
   gtk_window_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
@@ -170,7 +165,7 @@ static void exec_msg2clip_menu_cb(void)
 
 
   /* notebook */ 
-  GtkWidget *notebook = gtk_notebook_new();
+  notebook = gtk_notebook_new();
   /* main tab */
   create_config_main_page(notebook, g_opt.rcfile);
   /* about, copyright tab */
@@ -215,6 +210,20 @@ static void exec_msg2clip_menu_cb(void)
 static void messageview_show_cb(GObject *obj, gpointer msgview,
 				MsgInfo *msginfo, gboolean all_headers)
 {
+  MessageView *messageview;
+  HeaderView *headerview;
+  GtkWidget *hbox;
+  gchar *msg_path;
+  GtkWidget *copy_btn;
+  GdkPixbuf* pbuf;
+  GtkWidget* image;
+  GtkTooltips *tip;
+  GList* wl;
+  gint i;
+  gboolean bfound = FALSE;
+  gpointer gdata;
+
+  
 #if DEBUG
   g_print("[DEBUG] test: %p: messageview_show (%p), all_headers: %d: %s\n",
 	  obj, msgview, all_headers,
@@ -226,60 +235,60 @@ static void messageview_show_cb(GObject *obj, gpointer msgview,
     return;
   }
 
-  MessageView *messageview = (MessageView*)msgview;
+  messageview = (MessageView*)msgview;
   if (!messageview) {
     g_print("[DEBUG] messageview is NULL\n");
     return;
   }
 
-  HeaderView *headerview = messageview->headerview;
+  headerview = messageview->headerview;
   if (!headerview) {
     g_print("[DEBUG] headerview is NULL\n");
     return;
   }
   
-  GtkWidget *hbox = headerview->hbox;
+  hbox = headerview->hbox;
   if (!hbox) {
     g_print("[DEBUG] hbox is NULL\n");
     return;
   }
 
-  GList* wl = gtk_container_get_children(GTK_CONTAINER(hbox));
+  wl = gtk_container_get_children(GTK_CONTAINER(hbox));
 
-  gint i=g_list_length(wl)-1;
-  gboolean bfound = FALSE;
+  i = g_list_length(wl)-1;
 
   /* search recently added GtkImage */
   while (i >= 0) {
-    gpointer gdata = g_list_nth_data(wl, i);
+    gdata = g_list_nth_data(wl, i);
     if (GTK_IS_BUTTON(gdata) && gdata != headerview->image) {
       /* remove from hbox */
       g_print("[DEBUG] GTK_IS_BUTTON %p\n", gdata);
 #if DEBUG
       g_print("[DEBUG] remove button: %p\n", gicon);
 #endif
-      gtk_container_remove(GTK_CONTAINER(hbox), GTK_BUTTON(gdata));
+      gtk_container_remove(GTK_CONTAINER(hbox), GTK_WIDGET(gdata));
     }
     i--;
   }
 
-  gchar *msg_path = procmsg_get_message_file_path(msginfo);
+
+  msg_path = procmsg_get_message_file_path(msginfo);
                     
 
   debug_print("[DEBUG] msg_path:%s\n", msg_path);
 
 
   if (bfound != TRUE){
-    GtkWidget *copy_btn = gtk_button_new_from_stock(GTK_STOCK_FILE);
+    copy_btn = gtk_button_new_from_stock(GTK_STOCK_FILE);
     gtk_box_pack_end(GTK_BOX(hbox), copy_btn, FALSE, FALSE, 0);
 
-    GdkPixbuf* pbuf = gdk_pixbuf_new_from_xpm_data((const char**)page_save);
-    GtkWidget* image = gtk_image_new_from_pixbuf(pbuf);
+    pbuf = gdk_pixbuf_new_from_xpm_data((const char**)page_save);
+    image = gtk_image_new_from_pixbuf(pbuf);
     
     gtk_button_set_image(GTK_BUTTON(copy_btn), image);
     gtk_button_set_label(GTK_BUTTON(copy_btn), "");
 
-    GtkTooltips *tip = gtk_tooltips_new();
+    tip = gtk_tooltips_new();
     gtk_tooltips_set_tip(tip, copy_btn, _("Copy this mail to clipboard."), NULL);
 
     g_signal_connect(G_OBJECT(copy_btn), "clicked",
