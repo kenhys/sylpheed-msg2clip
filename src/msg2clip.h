@@ -23,9 +23,6 @@
 #define MSG2CLIP "msg2clip"
 #define MSG2CLIPRC "msg2cliprc"
 
-#define PLUGIN_NAME N_("Msg2Clip Plug-in")
-#define PLUGIN_DESC N_("Copy message to clipboard")
-
 #define GET_RC_BOOLEAN(keyarg) g_key_file_get_boolean(g_opt.rcfile, MSG2CLIP, keyarg, NULL)
 
 typedef struct _Msg2ClipOption Msg2ClipOption;

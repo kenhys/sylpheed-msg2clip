@@ -40,6 +40,9 @@
 
 #include "../res/page_save.xpm"
 
+#define PLUGIN_NAME N_("Msg2Clip Plug-in")
+#define PLUGIN_DESC N_("Copy message to clipboard")
+
 static SylPluginInfo info = {
   N_(PLUGIN_NAME),
   "0.1.0",
