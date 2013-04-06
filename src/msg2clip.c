@@ -138,7 +138,6 @@ static void activate_menu_cb(GtkMenuItem *menuitem, gpointer data)
 static void prefs_ok_cb(GtkWidget *widget, gpointer data)
 {
   
-  GList* folder_list = folder_get_list();
   
   gtk_widget_destroy(GTK_WIDGET(data));
 }
