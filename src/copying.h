@@ -1,4 +1,4 @@
-const gchar *copyright =""
+static const gchar *copyright =""
 "Copyright (c) 2012-2013, HAYASHI Kentaro <kenhys@gmail.com>\n"
 "All rights reserved.\n"
 "\n"
