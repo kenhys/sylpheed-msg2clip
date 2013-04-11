@@ -71,10 +71,10 @@ void plugin_load(void)
 {
   gpointer mainwin;
 
+  SYLPF_START_FUNC;
+
   syl_init_gettext(MSG2CLIP, "lib/locale");
   
-  g_print("msg2clip plug-in loaded!\n");
-
   syl_plugin_add_menuitem("/Tools", NULL, NULL, NULL);
   syl_plugin_add_menuitem("/Tools", _("Msg2Clip [msg2clip]"), exec_msg2clip_menu_cb, NULL);
 
@@ -91,14 +91,16 @@ void plugin_load(void)
   syl_plugin_signal_connect("messageview-show",
                             G_CALLBACK(messageview_show_cb), NULL);
   
-  g_print("msg2clip plug-in loading done\n");
-
+  SYLPF_END_FUNC;
 }
 
 void plugin_unload(void)
 {
-  g_print("msg2clip plug-in unloaded!\n");
+  SYLPF_START_FUNC;
+
   g_signal_handler_disconnect(syl_app_get(), app_exit_handler_id);
+
+  SYLPF_END_FUNC;
 }
 
 SylPluginInfo *plugin_info(void)
