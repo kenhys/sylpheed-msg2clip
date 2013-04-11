@@ -25,6 +25,8 @@
 #include "headerview.h"
 #include "messageview.h"
 #include "procheader.h"
+#include "sylplugin_factory.h"
+#include "copying.h"
 #include "msg2clip.h"
 
 #include "../res/page_save.xpm"
@@ -157,7 +159,12 @@ static void exec_msg2clip_menu_cb(void)
   /* main tab */
   create_config_main_page(notebook, g_opt.rcfile);
   /* about, copyright tab */
-  create_config_about_page(notebook, g_opt.rcfile);
+  sylpf_append_config_about_page(notebook,
+                                 g_opt.rcfile,
+                                 _("About"),
+                                 _(PLUGIN_NAME),
+                                 _(PLUGIN_DESC),
+                                 _(copyright));
 
   gtk_widget_show(notebook);
   gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
@@ -351,10 +358,6 @@ static void copy_btn_clicked(GtkButton *button, gpointer data)
 }
 
 
-static gchar* g_copyright = N_("Msg2Clip is distributed under GPL license.\n"
-			       "\n"
-			       "Copyright (C) 2012 HAYASHI Kentaro <kenhys@gmail.com>"
-			       "\n"
 
 GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey)
 {
@@ -399,48 +402,3 @@ GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey)
 
 }
 
-/* about, copyright tab */
-GtkWidget *create_config_about_page(GtkWidget *notebook, GKeyFile *pkey)
-{
-  GtkWidget *hbox;
-  GtkWidget *vbox;
-  GtkWidget *lbl;
-  GtkWidget *desc;
-  GtkWidget *scrolled;
-  GtkTextBuffer *tbuffer;
-  GtkWidget *tview;
-  GtkWidget *general_lbl;
-  
-  debug_print("create_config_about_page\n");
-  if (notebook == NULL){
-    return NULL;
-  }
-  
-  hbox = gtk_hbox_new(TRUE, 6);
-  vbox = gtk_vbox_new(FALSE, 6);
-
-  lbl = gtk_label_new(_("Msg2Clip"));
-  desc = gtk_label_new(PLUGIN_DESC);
-
-  /* copyright */
-  scrolled = gtk_scrolled_window_new(NULL, NULL);
-
-  gtk_box_pack_start(GTK_BOX(vbox), lbl, FALSE, TRUE, 6);
-  gtk_box_pack_start(GTK_BOX(vbox), desc, FALSE, TRUE, 6);
-  gtk_box_pack_start(GTK_BOX(vbox), scrolled, TRUE, TRUE, 6);
-  gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 6);
-
-  tbuffer = gtk_text_buffer_new(NULL);
-  gtk_text_buffer_set_text(tbuffer, _(g_copyright), strlen(g_copyright));
-  tview = gtk_text_view_new_with_buffer(tbuffer);
-  gtk_text_view_set_editable(GTK_TEXT_VIEW(tview), FALSE);
-  gtk_container_add(GTK_CONTAINER(scrolled), tview);
-    
-  gtk_box_pack_start(GTK_BOX(vbox), scrolled, TRUE, TRUE, 6);
-    
-  /**/
-  general_lbl = gtk_label_new(_("About"));
-  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), hbox, general_lbl);
-  gtk_widget_show_all(notebook);
-  return NULL;
-}
