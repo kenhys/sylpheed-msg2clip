@@ -1,8 +1,7 @@
 
 lib_LTLIBRARIES = msg2clip.la
 
-msg2clip_la_SOURCES = msg2clip.c \
-	$(sylplugin_factory_source_dir)/src/sylplugin_factory.c
+msg2clip_la_SOURCES = msg2clip.c
 
 msg2clip_la_LDFLAGS = -module -no-undefined -avoid-version
 
