@@ -1,24 +1,13 @@
 /*
  * Msg2Clip -- 
  * Copyright (C) 2012 HAYASHI Kentaro
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+#include "config.h"
 
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <glib/gi18n-lib.h>
 
 #if defined(G_OS_WIN32)
 #include <windows.h>
@@ -36,13 +25,18 @@
 #include "headerview.h"
 #include "messageview.h"
 #include "procheader.h"
+#include "sylplugin_factory.h"
+#include "copying.h"
 #include "msg2clip.h"
 
 #include "../res/page_save.xpm"
 
+#define PLUGIN_NAME N_("Msg2Clip Plug-in")
+#define PLUGIN_DESC N_("Copy message to clipboard")
+
 static SylPluginInfo info = {
   N_(PLUGIN_NAME),
-  "0.1.0",
+  VERSION,
   "HAYASHI Kentaro",
   N_(PLUGIN_DESC)
 };
@@ -65,10 +59,10 @@ void plugin_load(void)
 {
   gpointer mainwin;
 
+  SYLPF_START_FUNC;
+
   syl_init_gettext(MSG2CLIP, "lib/locale");
   
-  g_print("msg2clip plug-in loaded!\n");
-
   syl_plugin_add_menuitem("/Tools", NULL, NULL, NULL);
   syl_plugin_add_menuitem("/Tools", _("Msg2Clip [msg2clip]"), exec_msg2clip_menu_cb, NULL);
 
@@ -85,14 +79,16 @@ void plugin_load(void)
   syl_plugin_signal_connect("messageview-show",
                             G_CALLBACK(messageview_show_cb), NULL);
   
-  g_print("msg2clip plug-in loading done\n");
-
+  SYLPF_END_FUNC;
 }
 
 void plugin_unload(void)
 {
-  g_print("msg2clip plug-in unloaded!\n");
+  SYLPF_START_FUNC;
+
   g_signal_handler_disconnect(syl_app_get(), app_exit_handler_id);
+
+  SYLPF_END_FUNC;
 }
 
 SylPluginInfo *plugin_info(void)
@@ -123,16 +119,9 @@ static void app_exit_cb(GObject *obj, gpointer data)
   g_print("test: %p: app will exit\n", obj);
 }
 
-static void activate_menu_cb(GtkMenuItem *menuitem, gpointer data)
-{
-  g_print("menu activated\n");
-}
-
-
 static void prefs_ok_cb(GtkWidget *widget, gpointer data)
 {
   
-  GList* folder_list = folder_get_list();
   
   gtk_widget_destroy(GTK_WIDGET(data));
 }
@@ -150,7 +139,8 @@ static void exec_msg2clip_menu_cb(void)
   GtkWidget *confirm_area;
   GtkWidget *ok_btn;
   GtkWidget *cancel_btn;
-
+  GtkWidget *notebook;
+  
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width(GTK_CONTAINER(window), 8);
   gtk_window_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
@@ -165,11 +155,16 @@ static void exec_msg2clip_menu_cb(void)
 
 
   /* notebook */ 
-  GtkWidget *notebook = gtk_notebook_new();
+  notebook = gtk_notebook_new();
   /* main tab */
   create_config_main_page(notebook, g_opt.rcfile);
   /* about, copyright tab */
-  create_config_about_page(notebook, g_opt.rcfile);
+  sylpf_append_config_about_page(notebook,
+                                 g_opt.rcfile,
+                                 _("About"),
+                                 _(PLUGIN_NAME),
+                                 _(PLUGIN_DESC),
+                                 _(copyright));
 
   gtk_widget_show(notebook);
   gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE, TRUE, 0);
@@ -210,6 +205,20 @@ static void exec_msg2clip_menu_cb(void)
 static void messageview_show_cb(GObject *obj, gpointer msgview,
 				MsgInfo *msginfo, gboolean all_headers)
 {
+  MessageView *messageview;
+  HeaderView *headerview;
+  GtkWidget *hbox;
+  gchar *msg_path;
+  GtkWidget *copy_btn;
+  GdkPixbuf* pbuf;
+  GtkWidget* image;
+  GtkTooltips *tip;
+  GList* wl;
+  gint i;
+  gboolean bfound = FALSE;
+  gpointer gdata;
+
+  
 #if DEBUG
   g_print("[DEBUG] test: %p: messageview_show (%p), all_headers: %d: %s\n",
 	  obj, msgview, all_headers,
@@ -221,60 +230,60 @@ static void messageview_show_cb(GObject *obj, gpointer msgview,
     return;
   }
 
-  MessageView *messageview = (MessageView*)msgview;
+  messageview = (MessageView*)msgview;
   if (!messageview) {
     g_print("[DEBUG] messageview is NULL\n");
     return;
   }
 
-  HeaderView *headerview = messageview->headerview;
+  headerview = messageview->headerview;
   if (!headerview) {
     g_print("[DEBUG] headerview is NULL\n");
     return;
   }
   
-  GtkWidget *hbox = headerview->hbox;
+  hbox = headerview->hbox;
   if (!hbox) {
     g_print("[DEBUG] hbox is NULL\n");
     return;
   }
 
-  GList* wl = gtk_container_get_children(GTK_CONTAINER(hbox));
+  wl = gtk_container_get_children(GTK_CONTAINER(hbox));
 
-  gint i=g_list_length(wl)-1;
-  gboolean bfound = FALSE;
+  i = g_list_length(wl)-1;
 
   /* search recently added GtkImage */
   while (i >= 0) {
-    gpointer gdata = g_list_nth_data(wl, i);
+    gdata = g_list_nth_data(wl, i);
     if (GTK_IS_BUTTON(gdata) && gdata != headerview->image) {
       /* remove from hbox */
       g_print("[DEBUG] GTK_IS_BUTTON %p\n", gdata);
 #if DEBUG
       g_print("[DEBUG] remove button: %p\n", gicon);
 #endif
-      gtk_container_remove(GTK_CONTAINER(hbox), GTK_BUTTON(gdata));
+      gtk_container_remove(GTK_CONTAINER(hbox), GTK_WIDGET(gdata));
     }
     i--;
   }
 
-  gchar *msg_path = procmsg_get_message_file_path(msginfo);
+
+  msg_path = procmsg_get_message_file_path(msginfo);
                     
 
   debug_print("[DEBUG] msg_path:%s\n", msg_path);
 
 
   if (bfound != TRUE){
-    GtkWidget *copy_btn = gtk_button_new_from_stock(GTK_STOCK_FILE);
+    copy_btn = gtk_button_new_from_stock(GTK_STOCK_FILE);
     gtk_box_pack_end(GTK_BOX(hbox), copy_btn, FALSE, FALSE, 0);
 
-    GdkPixbuf* pbuf = gdk_pixbuf_new_from_xpm_data((const char**)page_save);
-    GtkWidget* image = gtk_image_new_from_pixbuf(pbuf);
+    pbuf = gdk_pixbuf_new_from_xpm_data((const char**)page_save);
+    image = gtk_image_new_from_pixbuf(pbuf);
     
     gtk_button_set_image(GTK_BUTTON(copy_btn), image);
     gtk_button_set_label(GTK_BUTTON(copy_btn), "");
 
-    GtkTooltips *tip = gtk_tooltips_new();
+    tip = gtk_tooltips_new();
     gtk_tooltips_set_tip(tip, copy_btn, _("Copy this mail to clipboard."), NULL);
 
     g_signal_connect(G_OBJECT(copy_btn), "clicked",
@@ -348,4 +357,48 @@ static void copy_btn_clicked(GtkButton *button, gpointer data)
   } 
 }
 
+
+
+GtkWidget *create_config_main_page(GtkWidget *notebook, GKeyFile *pkey)
+{
+  GtkWidget *vbox;
+  GtkWidget *startup_align;
+  GtkWidget *startup_frm;
+  GtkWidget *startup_frm_align;
+  GtkWidget *general_lbl;
+  
+  debug_print("create_config_main_page\n");
+  if (notebook == NULL){
+    return NULL;
+  }
+  /* startup */
+  if (pkey!=NULL){
+  }
+  vbox = gtk_vbox_new(FALSE, 0);
+
+  /**/
+  startup_align = gtk_alignment_new(0, 0, 1, 1);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(startup_align), ALIGN_TOP, ALIGN_BOTTOM, ALIGN_LEFT, ALIGN_RIGHT);
+
+  startup_frm = gtk_frame_new(_("Startup Option"));
+  startup_frm_align = gtk_alignment_new(0, 0, 1, 1);
+  gtk_alignment_set_padding(GTK_ALIGNMENT(startup_frm_align), ALIGN_TOP, ALIGN_BOTTOM, ALIGN_LEFT, ALIGN_RIGHT);
+
+
+  g_opt.startup = gtk_check_button_new_with_label(_("Enable plugin on startup."));
+  gtk_container_add(GTK_CONTAINER(startup_frm_align), g_opt.startup);
+  gtk_container_add(GTK_CONTAINER(startup_frm), startup_frm_align);
+  gtk_container_add(GTK_CONTAINER(startup_align), startup_frm);
+
+  gtk_widget_show(g_opt.startup);
+
+  /**/
+  gtk_box_pack_start(GTK_BOX(vbox), startup_align, FALSE, FALSE, 0);
+
+  general_lbl = gtk_label_new(_("General"));
+  gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox, general_lbl);
+  gtk_widget_show_all(notebook);
+  return NULL;
+
+}
 
