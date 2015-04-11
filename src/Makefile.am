@@ -5,7 +5,7 @@ msg2clip_la_SOURCES = msg2clip.c
 
 msg2clip_la_LDFLAGS = -module -no-undefined -avoid-version
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	$(GTK_CFLAGS) \
 	-I$(includedir) \
 	$(SYLPHEED_CFLAGS)
