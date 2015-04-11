@@ -1,6 +1,6 @@
 /*
  * Msg2Clip -- 
- * Copyright (C) 2012 HAYASHI Kentaro
+ * Copyright (C) 2012-2015 HAYASHI Kentaro <kenhys@gmail.com>
  *
  */
 
